@@ -13,14 +13,27 @@
     <arg name="margin" default="0.03"/>
     <arg name="pole_height" default="0.417"/>
     <arg name="pole_radius" default="0.005"/>
+    <!-- Coordinates of the gazebo origin in desired reference frame: X, Y, Heading (yaw) -->
+    <arg name="gazebo_origin" default="0 0 0"/>
+
+    <!-- Private arguments -->
+    <arg name="_name" value="$(eval family + '_' + str(id) if name == '' else name)"/>
+
+    <arg name="gazebo_origin_x" value="$(eval eval(gazebo_origin)[0])"/>
+    <arg name="gazebo_origin_y" value="$(eval eval(gazebo_origin)[1])"/>
+    <arg name="gazebo_origin_Y" value="$(eval eval(gazebo_origin)[2])"/>
+    
+    <arg name="gazebo_x" value="$(eval cos(float(gazebo_origin_Y)) * (x -  float(gazebo_origin_x)) - sin(float(gazebo_origin_Y)) * (y - float(gazebo_origin_y)))"/>
+    <arg name="gazebo_y" value="$(eval sin(float(gazebo_origin_Y)) * (x -  float(gazebo_origin_x)) + cos(float(gazebo_origin_Y)) * (y - float(gazebo_origin_y)))"/>
+
+    <arg name="gazebo_R" value="$(eval R * pi / 180 )"/>
+    <arg name="gazebo_P" value="$(eval P * pi / 180 )"/>
+    <arg name="gazebo_Y" value="$(eval (Y - float(gazebo_origin_Y)) * pi / 180 )"/>
+    
 
     <param name="$(arg family)_$(arg id)_description" command="$(find xacro)/xacro '$(find marker_description)/urdf/marker.urdf.xacro' sides:=$(arg sides) family:='$(arg family)' id:=$(arg id) name:='$(arg name)' marker_size:=$(arg marker_size) margin:=$(arg margin) pole_height:=$(arg pole_height) pole_radius:=$(arg pole_radius)" />
 
-
-    <node unless="$(eval name=='')" name="$(arg name)_spawner" pkg="gazebo_ros" type="spawn_model"
-        args="-x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y) -unpause -urdf -model $(arg name) -param $(arg family)_$(arg id)_description" respawn="false" output="screen" />
-    <node if="$(eval name=='')" name="$(arg family)_$(arg id)_spawner" pkg="gazebo_ros" type="spawn_model"
-        args="-x $(arg x) -y $(arg y) -z $(arg z) -R $(arg R) -P $(arg P) -Y $(arg Y) -unpause -urdf -model $(arg family)_$(arg id) -param $(arg family)_$(arg id)_description" respawn="false" output="screen" />
-
+    <node name="$(arg _name)_spawner" pkg="gazebo_ros" type="spawn_model"
+        args="-x $(arg gazebo_x) -y $(arg gazebo_y) -z $(arg z) -R $(arg gazebo_R) -P $(arg gazebo_P) -Y $(arg gazebo_Y) -unpause -urdf -model $(arg _name) -param $(arg family)_$(arg id)_description" respawn="false" output="screen" />
  
 </launch>
